@@ -23,6 +23,23 @@ jobs:
       - name: Patch permissions and minSdk
         run: python3 patch.py
       - run: flutter pub get
+      - name: Fix device_apps plugin
+        run: |
+          python3 - <<'PY'
+          import glob, re
+          base = '/home/runner/.pub-cache/hosted/pub.dev/device_apps-*/android/'
+          for f in glob.glob(base + 'build.gradle'):
+              s = open(f).read()
+              s = s.replace('jcenter()', 'mavenCentral()')
+              s = re.sub(r'compileSdkVersion\s+\d+', 'compileSdkVersion 34', s)
+              if 'namespace' not in s:
+                  s = re.sub(r'android\s*\{', 'android {\n    namespace "fr.g123k.deviceapps"', s, 1)
+              open(f, 'w').write(s)
+          for m in glob.glob(base + 'src/main/AndroidManifest.xml'):
+              t = open(m).read()
+              t = re.sub(r'\s+package="[^"]*"', '', t, 1)
+              open(m, 'w').write(t)
+          PY
       - run: flutter build apk --release
       - uses: actions/upload-artifact@v4
         with:
