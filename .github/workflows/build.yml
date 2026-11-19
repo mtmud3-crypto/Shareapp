@@ -40,6 +40,18 @@ jobs:
               t = re.sub(r'\s+package="[^"]*"', '', t, 1)
               open(m, 'w').write(t)
           PY
+      - name: Force compileSdk 36
+        run: |
+          mkdir -p ~/.gradle
+          cat > ~/.gradle/init.gradle <<'EOF'
+          allprojects {
+              afterEvaluate { p ->
+                  if (p.hasProperty('android')) {
+                      p.android.compileSdkVersion 36
+                  }
+              }
+          }
+          EOF
       - run: flutter build apk --release
       - uses: actions/upload-artifact@v4
         with:
